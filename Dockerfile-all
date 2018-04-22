@@ -1,0 +1,20 @@
+# Image: jstubbs/low_power_collectd
+from centos:7
+
+RUN yum -y update
+RUN yum -y groupinstall development 
+RUN yum -y install https://centos7.iuscommunity.org/ius-release.rpm 
+RUN yum -y install python36u 
+RUN yum -y install python36u-pip 
+
+ADD requirements.txt /requirements.txt
+RUN pip3.6 install -r /requirements.txt
+
+RUN yum -y install collectd
+ADD ironic_ids.json /ironic_ids.json
+ADD collect_power.py /collect_power.py
+
+ADD entry.sh /entry.sh
+RUN chmod +x /entry.sh
+
+ENTRYPOINT ["./entry.sh"]
