@@ -8,6 +8,16 @@ import sys
 import paramiko
 import timeit
 
+def get_config_from_file():
+    with open('/low_power_conf.json', 'r') as f:
+        conf = json.load(f)
+    return conf['SSH_USER'], conf['TESTING'], conf['HOSTNAME'], conf['INTERVAL'], conf['WRITE_TIME_RESULTS']
+
+def get_ssh_password_from_file():
+    with open('/ssh_password', 'r') as f:
+        ssh_password = f.read()
+    return ssh_password
+
 def get_ssh_connection(ip, username, password):
     """Make an ssh connection to `ip` with `username` and `password`."""
     ssh = paramiko.SSHClient()
@@ -83,12 +93,18 @@ def process_raw_output(output, hostname, interval, testing=False):
 def main():
     time_0 = timeit.default_timer()
     IP = os.environ.get('IP', '172.16.109.218')
-    SSH_USER = os.environ.get('SSH_USER', 'Administrator')
+    if os.path.exists('/low_power_conf.json'):
+        SSH_USER, TESTING, HOSTNAME, INTERVAL, WRITE_TIME_RESULTS = get_config_from_file()
+    else:
+        SSH_USER = os.environ.get('SSH_USER', 'Administrator')
+        TESTING = os.environ.get('TESTING', 'False')
+        HOSTNAME = os.environ.get('HOSTNAME', 'localhost')
+        INTERVAL = os.environ.get('INTERVAL', '1')
+        WRITE_TIME_RESULTS = os.environ.get('WRITE_TIME_RESULTS', 'False')
+
     SSH_PASSWORD = os.environ.get('SSH_PASSWORD')
-    TESTING = os.environ.get('TESTING', 'False')
-    HOSTNAME = os.environ.get('HOSTNAME', 'localhost')
-    INTERVAL = os.environ.get('INTERVAL', '1')
-    WRITE_TIME_RESULTS = os.environ.get('WRITE_TIME_RESULTS', 'Fakse')
+    if not SSH_PASSWORD:
+        SSH_PASSWORD = get_ssh_password_from_file()
     write_time_results = WRITE_TIME_RESULTS == 'True'
     if write_time_results:
         TIME_RESULTS_FILE = os.environ.get('TIME_RESULTS_FILE', 'time_results.csv')
