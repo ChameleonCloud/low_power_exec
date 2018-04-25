@@ -2,10 +2,11 @@ version: "2.0"
 services:
     lowPowerCollectd:
          image: jstubbs/low_power_collectd
-         mounts:
+         privileged: True
+         volumes:
              - ./low_power_conf.json:/low_power_conf.json
              - ./ssh_password:/ssh_password
-             - ./collectd-gnocchi.conf.password:/etc/collectd.d//collectd-gnocchi.conf
+             - ./collectd-gnocchi.conf.password:/etc/collectd.conf
          environment:
              HOSTNAME:
              INTERVAL:
