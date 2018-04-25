@@ -1,0 +1,9 @@
+{
+
+  "SSH_USER": "Administrator",
+  "HOSTNAME": "localhost",
+  "TESTING": "False",
+  "INTERVAL": "-60",
+  "WRITE_TIME_RESULTS": "False"
+
+}
