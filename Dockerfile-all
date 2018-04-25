@@ -27,7 +27,4 @@ ADD collectd.d/* /etc/collectd.d/
 ADD ironic_ids.json /ironic_ids.json
 ADD collect_power.py /collect_power.py
 
-ADD entry.sh /entry.sh
-RUN chmod +x /entry.sh
-
-ENTRYPOINT ["./entry.sh"]
+ENTRYPOINT ["collectd", "-f"]
