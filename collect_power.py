@@ -16,7 +16,7 @@ def get_config_from_file():
 def get_ssh_password_from_file():
     with open('/ssh_password', 'r') as f:
         ssh_password = f.read()
-    return ssh_password
+    return ssh_password.strip()
 
 def get_ssh_connection(ip, username, password):
     """Make an ssh connection to `ip` with `username` and `password`."""
@@ -109,7 +109,7 @@ def main():
     if write_time_results:
         TIME_RESULTS_FILE = os.environ.get('TIME_RESULTS_FILE', 'time_results.csv')
     testing = TESTING == 'True'
-    if testing:
+    if write_time_results:
         print("writing time results to: {}".format(TIME_RESULTS_FILE))
 
     if not SSH_PASSWORD:
