@@ -7,6 +7,7 @@ services:
              - ./low_power_conf.json:/low_power_conf.json
              - ./ssh_password:/ssh_password
              - ./collectd-gnocchi.conf.password:/etc/collectd.conf
+             - ./data:/var/lib/collectd/
          environment:
              HOSTNAME:
              INTERVAL:
