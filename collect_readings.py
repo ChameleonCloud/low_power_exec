@@ -121,24 +121,28 @@ def process_raw_output_temperature(output, hostname, interval, testing=False):
     for idx, line in enumerate(r):
         # Collect every cartridge number for a key value.
         if '#Cartridge' in str(line):
-            cart_num =  line.split(':')[1].replace('#', '')
+            cart_line = r[idx].decode("utf-8")
+            cart_num =  cart_line.split(':')[0]
         # We are only collecting the CPU temperature at this moment (Temp Sensor 2)
         elif 'Temperature Sensor 2:' in str(line):
+            temp_line = r[idx+3].decode("utf-8")
             try:
-                instant_temperature = (r[idx+3]).split(':')[1].strip().split()[0]
+                instant_temperature = temp_line.split(':')[1].strip().split()[0]
             except IndexError:
-                print("Unable to parse instant temperature - 'Temperature Sensor 2:'' not found in r[idx+1]: {}".format(r[idx+1]))
+                print("Unable to parse instant temperature - 'Temperature Sensor 2:'' not found in temp_line: {}".format(temp_line))
             except Exception as e:
-                print("Unable to parse instant temperature - unexpected error: {} parsing r[idx+1]: {}".format(r[idx+1]))
+                print("Unable to parse instant temperature - unexpected error: {} parsing temp_line: {}".format(tem_line))
+            sensor_line = r[idx+1].decode("utf-8")
             try:
-                sensor_name = (r[idx+1]).split(':')[1].strip()
+                sensor_name = sensor_line.split(':')[1].strip()
             except IndexError:
-                 print("Unable to parse sensor name - 'Temperature Sensor 2:'' not found in r[idx+3]: {}".format(r[idx+3]))
+                 print("Unable to parse sensor name - 'Temperature Sensor 2:'' not found in sensor_line: {}".format(sensor_line))
             except Exception as e:
-                print("Unable to parse sensor name - unexpected error: {} parsing r[idx+3]: {}".format(r[idx+3]))    
-            cart_code = "c" + cart_num + "n1"
+                print("Unable to parse sensor name - unexpected error: {} parsing sensor_line: {}".format(sensor_line))    
+            cart_code = cart_num + "n1"
+            node_name = cart_line.split(":")[1].strip()
             if (instant_temperature != 'N/A'):
-                push_to_collectd_temperature(cart_code, instant_temperature, hostname, interval, testing)
+                push_to_collectd_temperature(node_name, cart_code, instant_temperature, hostname, interval, testing)
             
             # TODO: Create a dictionary with the key of a sensor name and the reading as a value
             #sensor_dict = dict()
