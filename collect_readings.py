@@ -50,6 +50,21 @@ def execute_power_command(ssh, command='show cartridge power all'):
         sys.exit()
     return output
 
+def execute_temperature_command(ssh, command='show cartridge temperature all'):
+    """Execute the iLO temperature command to collect temperature data over an `ssh` connection to the chassis controller."""
+    try:
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
+        output = ssh_stdout.read()
+    except paramiko.SSHException as e:
+        print("Unable to execute command over SSH: error connecting or establishing connection. Exception: {}".format(e))
+        ssh.close()
+        sys.exit()
+    except Exception as e:
+        print("Unable to execute command over SSH: unknown error. Exception: {}".format(e))
+        ssh.close()
+        sys.exit()
+    return output
+
 def get_ironic_id(node_cartridge_code):
     """Convert the hostname to an ironic id"""
     with open('/ironic_ids.json', 'r') as f:
@@ -70,7 +85,16 @@ def push_to_collectd(node_name, node_cartridge_code, instant_wattage, hostname, 
     print('PUTVAL "{}/exec-{}/gauge-power" interval={} N:{}'.format(hostname, ironic_id, interval, instant_wattage))
     # print('PUTVAL "{}" N:{}'.format(node_cartridge_code, instant_wattage))
 
-def process_raw_output(output, hostname, interval, testing=False):
+def push_to_collectd_temperature(node_name, node_cartridge_code, instant_temperature, hostname, interval, testing=False):
+    """Use the PUTVAL command to push a temperature cosumption tuple into collectd."""
+    if testing:
+        print("Top of push_to_collectd for node_name: {} and instant_temperature: {}".format(node_name, instant_temperature))
+    ironic_id = get_ironic_id(node_cartridge_code)
+    # scripts launched by the collectd exec plugin should write values to standard out in the format specified
+    # here:  http://collectd.org/documentation/manpages/collectd-exec.5.shtml
+    print('PUTVAL "{}/exec-{}/temperature-cpu" interval={} N:{}'.format(hostname, ironic_id, interval, instant_temperature))
+
+def process_raw_output_power(output, hostname, interval, testing=False):
     """Parse the raw output from the power command and issue PUTVAL commands to push data to collectd."""
     r = output.splitlines()
     for idx, line in enumerate(r):
@@ -89,6 +113,39 @@ def process_raw_output(output, hostname, interval, testing=False):
             node_cartridge_code = node_line.split(":")[0].strip()
             node_name = node_line.split(":")[1].strip()
             push_to_collectd(node_name, node_cartridge_code, instant_wattage, hostname, interval, testing)
+
+def process_raw_output_temperature(output, hostname, interval, testing=False):
+    """Parse the raw output from the temperature command and issue PUTVAL commands to push data to collectd."""
+    r = output.splitlines()
+    #data = dict()
+    for idx, line in enumerate(r):
+        # Collect every cartridge number for a key value.
+        if '#Cartridge' in str(line):
+            cart_num =  line.split(':')[1].replace('#', '')
+        # We are only collecting the CPU temperature at this moment (Temp Sensor 2)
+        elif 'Temperature Sensor 2:' in str(line):
+            try:
+                instant_temperature = (r[idx+3]).split(':')[1].strip().split()[0]
+            except IndexError:
+                print("Unable to parse instant temperature - 'Temperature Sensor 2:'' not found in r[idx+1]: {}".format(r[idx+1]))
+            except Exception as e:
+                print("Unable to parse instant temperature - unexpected error: {} parsing r[idx+1]: {}".format(r[idx+1]))
+            try:
+                sensor_name = (r[idx+1]).split(':')[1].strip()
+            except IndexError:
+                 print("Unable to parse sensor name - 'Temperature Sensor 2:'' not found in r[idx+3]: {}".format(r[idx+3]))
+            except Exception as e:
+                print("Unable to parse sensor name - unexpected error: {} parsing r[idx+3]: {}".format(r[idx+3]))    
+            cart_code = "c" + cart_num + "n1"
+            push_to_collectd_temperature(cart_code, instant_temperature, hostname, interval, testing)
+            
+            # TODO: Create a dictionary with the key of a sensor name and the reading as a value
+            #sensor_dict = dict()
+            #sensor_dict = {sensor_name : instant_temperature}
+            #data = {cart_num : sensor_dict}
+            #       print(data)
+             
+            
 
 def main():
     time_0 = timeit.default_timer()
@@ -118,18 +175,20 @@ def main():
         print("obtaining an SSH connection.")
     ssh = get_ssh_connection(IP, SSH_USER, SSH_PASSWORD)
     if testing:
-        print("SSH connection obtained. executing power command.")
+        print("SSH connection obtained. executing commands.")
     time_1 = timeit.default_timer()
-    output = execute_power_command(ssh)
+    output_power = execute_power_command(ssh)
     time_2 = timeit.default_timer()
-    if testing:
-        print("command executed. parsing raw output.")
-    process_raw_output(output, HOSTNAME, INTERVAL, testing)
+    output_temperature = execute_temperature_command(ssh)
     time_3 = timeit.default_timer()
+    if testing:
+        print("command executed. parsing raw power output.")
+    process_raw_output_power(output_power, HOSTNAME, INTERVAL, testing)
+    time_4 = timeit.default_timer()
     ssh.close()
     if write_time_results:
         with open(TIME_RESULTS_FILE, 'a') as f:
-            f.write('{},{},{},{},{},{},{},{}\n'.format(time_0, time_1, time_2, time_3, time_1-time_0, time_2-time_1, time_3-time_2, time_3-time_0))
+            f.write('{},{},{},{},{},{},{},{},{},{}\n'.format(time_0, time_1, time_2, time_3, time_4, time_1-time_0, time_2-time_1, time_3-time_2, time_4-time_3, time_4-time_0))
 
 if __name__ == '__main__':
     main()

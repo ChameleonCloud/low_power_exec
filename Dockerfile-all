@@ -25,6 +25,6 @@ ADD collectd.d/* /etc/collectd.d/
 
 # exec script
 ADD ironic_ids.json /ironic_ids.json
-ADD collect_power.py /collect_power.py
+ADD collect_readings.py /collect_readings.py
 
 ENTRYPOINT ["collectd", "-f"]

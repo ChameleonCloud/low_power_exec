@@ -6,6 +6,6 @@ from python:3.5.2
 add requirements.txt /requirements.txt
 RUN pip install --no-cache-dir -r /requirements.txt
 add ironic_ids.json /ironic_ids.json
-add collect_power.py /collect_power.py
+add collect_readings.py /collect_readings.py
 
-CMD ["python", "/collect_power.py"]
+CMD ["python", "/collect_readings.py"]
