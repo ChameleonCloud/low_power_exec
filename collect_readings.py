@@ -75,10 +75,10 @@ def get_ironic_id(node_cartridge_code):
         print("Unexpected node_cartridge_code: {}".format(node_cartridge_code))
         sys.exit()
 
-def push_to_collectd(node_name, node_cartridge_code, instant_wattage, hostname, interval, testing=False):
+def push_to_collectd_power(node_name, node_cartridge_code, instant_wattage, hostname, interval, testing=False):
     """Use the PUTVAL command to push a power cosumption tuple into collectd."""
     if testing:
-        print("Top of push_to_collectd for node_name: {} and instant_wattage: {}".format(node_name, instant_wattage))
+        print("Top of push_to_collectd_power for node_name: {} and instant_wattage: {}".format(node_name, instant_wattage))
     ironic_id = get_ironic_id(node_cartridge_code)
     # scripts launched by the collectd exec plugin should write values to standard out in the format specified
     # here:  http://collectd.org/documentation/manpages/collectd-exec.5.shtml
@@ -88,7 +88,7 @@ def push_to_collectd(node_name, node_cartridge_code, instant_wattage, hostname, 
 def push_to_collectd_temperature(node_name, node_cartridge_code, instant_temperature, hostname, interval, testing=False):
     """Use the PUTVAL command to push a temperature cosumption tuple into collectd."""
     if testing:
-        print("Top of push_to_collectd for node_name: {} and instant_temperature: {}".format(node_name, instant_temperature))
+        print("Top of push_to_collectd_temperature for node_name: {} and instant_temperature: {}".format(node_name, instant_temperature))
     ironic_id = get_ironic_id(node_cartridge_code)
     # scripts launched by the collectd exec plugin should write values to standard out in the format specified
     # here:  http://collectd.org/documentation/manpages/collectd-exec.5.shtml
@@ -112,7 +112,7 @@ def process_raw_output_power(output, hostname, interval, testing=False):
             node_line = r[idx+4].decode("utf-8")
             node_cartridge_code = node_line.split(":")[0].strip()
             node_name = node_line.split(":")[1].strip()
-            push_to_collectd(node_name, node_cartridge_code, instant_wattage, hostname, interval, testing)
+            push_to_collectd_power(node_name, node_cartridge_code, instant_wattage, hostname, interval, testing)
 
 def process_raw_output_temperature(output, hostname, interval, testing=False):
     """Parse the raw output from the temperature command and issue PUTVAL commands to push data to collectd."""
@@ -185,6 +185,9 @@ def main():
     if testing:
         print("command executed. parsing raw power output.")
     process_raw_output_power(output_power, HOSTNAME, INTERVAL, testing)
+    if testing:
+        print("command executed. parsing raw thermal output")
+    process_raw_output_temperature(output_temperature, HOSTNAME, INTERVAL, testing)
     time_4 = timeit.default_timer()
     ssh.close()
     if write_time_results:
