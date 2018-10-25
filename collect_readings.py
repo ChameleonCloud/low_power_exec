@@ -137,7 +137,8 @@ def process_raw_output_temperature(output, hostname, interval, testing=False):
             except Exception as e:
                 print("Unable to parse sensor name - unexpected error: {} parsing r[idx+3]: {}".format(r[idx+3]))    
             cart_code = "c" + cart_num + "n1"
-            push_to_collectd_temperature(cart_code, instant_temperature, hostname, interval, testing)
+            if (instant_temperature != 'N/A'):
+                push_to_collectd_temperature(cart_code, instant_temperature, hostname, interval, testing)
             
             # TODO: Create a dictionary with the key of a sensor name and the reading as a value
             #sensor_dict = dict()
