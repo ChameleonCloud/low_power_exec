@@ -1,7 +1,7 @@
 version: "2.0"
 services:
     lowPowerCollectd:
-         image: jstubbs/low_power_collectd
+         image: awbarnes/low_power_collectd
          privileged: True
          volumes:
              - ./low_power_conf.json:/low_power_conf.json
