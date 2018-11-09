@@ -1,5 +1,5 @@
 # image: low_power_exec
-# Python script to collect power usage (in wattage) from low-power nodes in an HP Moonshot 1500 Chassis using iLO commands over SSH to the chassis controller.
+# Python script to collect power usage (in wattage) and temperature readings (in celsius) from low-power nodes in an HP Moonshot 1500 Chassis using iLO commands over SSH to the chassis controller.
 
 
 from python:3.5.2

@@ -1,4 +1,4 @@
-# Image: jstubbs/low_power_collectd
+# Image: awbarnes/low_power_collectd
 from centos:7.4.1708
 
 RUN adduser apim

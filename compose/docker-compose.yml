@@ -4,9 +4,13 @@ services:
          image: awbarnes/low_power_collectd
          privileged: True
          volumes:
+             # JSON with each Cartridge mapped to a node UID
              - ./low_power_conf.json:/low_power_conf.json
+             # SSH password to the Moonshot chassis
              - ./ssh_password:/ssh_password
+             # Config for collectd with the gnocchi plugin and filled in gnocchi configuration
              - ./collectd-gnocchi.conf.password:/etc/collectd.conf
+             # Location of the converted and compiled metrics 
              - ./data:/var/lib/collectd/
          environment:
              HOSTNAME:
