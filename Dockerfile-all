@@ -21,7 +21,7 @@ RUN git clone https://github.com/ChameleonCloud/collectd-gnocchi.git
 RUN cd /collectd-gnocchi && pip2 install .
 
 # collectd.conf
-ADD collectd.d/* /etc/collectd.d/
+ADD collectd.conf /etc/collectd.conf
 
 # exec script
 ADD ironic_ids.json /ironic_ids.json
