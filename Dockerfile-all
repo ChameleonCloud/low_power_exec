@@ -18,7 +18,7 @@ RUN yum -y install python2-devel python-pip
 
 # checkout and build the gnocchi plugin
 RUN git clone https://github.com/ChameleonCloud/collectd-gnocchi.git
-RUN cd /collectd-gnocchi && pip2 install .
+RUN cd /collectd-gnocchi && git checkout moonshot-power && pip2 install .
 
 # collectd.conf
 ADD collectd.conf /etc/collectd.conf
