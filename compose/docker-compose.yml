@@ -12,6 +12,8 @@ services:
              - ./collectd-gnocchi.conf.password:/etc/collectd.conf
              # Location of the converted and compiled metrics 
              - ./data:/var/lib/collectd/
+             # Location of Logs
+             - ./logs:/var/log/gnocchi_collectd/
          environment:
              HOSTNAME:
              INTERVAL:

@@ -92,7 +92,7 @@ def push_to_collectd_temperature(node_name, node_cartridge_code, instant_tempera
     ironic_id = get_ironic_id(node_cartridge_code)
     # scripts launched by the collectd exec plugin should write values to standard out in the format specified
     # here:  http://collectd.org/documentation/manpages/collectd-exec.5.shtml
-    print('PUTVAL "{}/exec-{}/temperature-cpu" interval={} N:{}'.format(hostname, ironic_id, interval, instant_temperature))
+    print('PUTVAL "{}/exec-{}/gauge-temperature_cpu" interval={} N:{}'.format(hostname, ironic_id, interval, instant_temperature))
 
 def process_raw_output_power(output, hostname, interval, testing=False):
     """Parse the raw output from the power command and issue PUTVAL commands to push data to collectd."""
