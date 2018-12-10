@@ -3,6 +3,9 @@ Python Script for collecting power and temperature readings from dell nodes usin
 """
 import subprocess
 import csv
+import logging
+import json
+import os
 
 def get_config_from_file():
     with open('/dell_conf.json', 'r') as f:
@@ -10,98 +13,89 @@ def get_config_from_file():
     return conf['IDRAC_USER'], conf['TESTING'], conf['HOSTNAME'], conf['INTERVAL'], conf['WRITE_TIME_RESULTS']
 
 def get_idrac_password_from_file():
-    with open('/idrac_password', 'r') as f:
+    with open('idrac_password', 'r') as f:
         idrac_password = f.read()
     return idrac_password.strip()
 
-def get_ironic_id(node_name):
-    """Convert the nodename to an ironic id"""
-    with open('/dell_nodes.json', 'r') as f:
-        dell_nodes = json.load(f)
+def execute_power_command(idrac_user,idrac_pass,idrac_host):
+    args =["ipmitool", "-I", "lanplus", "-U", idrac_user, "-P", idrac_pass, "-H", idrac_host+"-oob", "dcmi", "power", "reading"]
     try:
-        return dell_nodes[node_name]
-    except KeyError:
-        print("Unexpected node_name: {}".format(node_name))
-        sys.exit()
+        output = subprocess.check_output(args, timeout=1)
+    except subprocess.TimeoutExpired as e:
+        logging.warning('IPMI command timed out on Node %s', idrac_host)
+        raise 
+    #except Exception as e:
+    #   logging.warning(e) 
+    else:
+        return output    
 
-def execute_power_command(idrac_user,idrac_pass,idrac_ip)
+def execute_temperature_command(idrac_user,idrac_pass,idrac_host):
+    args =["ipmitool", "-I", "lanplus", "-U", idrac_user, "-P", idrac_pass, "-H", idrac_host+"-oob", "dcmi", "get_temp_reading"]
     try:
-        args =["ipmitool", "-I", "lanplus", "-U", idrac_user, "-P", idrac_pass, "-H", idrac_ip, "dcmi", "power", "reading"]
-        output = subprocess.check_output(args)
-    except Exception as e:
-        print("Unable to execute ipmitool command: {}".format(e))
-        sys.exit()
-    return output    
+        output = subprocess.check_output(args, timeout=2)
+    except subprocess.TimeoutExpired as e:
+        logging.warning('IPMI command timed out on Node %s', idrac_host)
+        raise
+    #except Exception as e:
+    #    logging.warning(e)
+    else:
+        return output    
 
-def execute_temperature_command(idrac_user,idrac_pass,idrac_ip)
-    try:
-        args =["ipmitool", "-I", "lanplus", "-U", idrac_user, "-P", idrac_pass, "-H", idrac_ip, "dcmi", "get_temp_reading"]
-        output = subprocess.check_output(args)
-    except Exception as e:
-        print("Unable to execute ipmitool command: {}".format(e))
-        sys.exit()
-    return output    
-
-def process_raw_output_power(output, node_id, testing)
+def process_raw_output_power(output, node_name, ironic_id, interval):
     p = output.decode("utf-8")
     p = p.splitlines()
     for idx, line in enumerate(p):
-        if 'Watts' in str(line):
-            watt_line = p[idx]
-            try:
-                instant_wattage = watt_line.split(':')[1].strip(' ').split(' ')[0]
-                if testing:
-                    sensor_name = watt_line.split(':')[0].strip()
-                    print("{} : {}".format(sensor_name, instant_wattage))
-            except IndexError:
-                print("Unable to parse instant wattage - 'Instant Wattage:' not found in watt_line: {}".format(watt_line))
-            except Exception as e:
-                print("Unable to parse instant wattage - unexpected error: {} parsing watt_line: {}".format(e, watt_line))
-            push_to_collectd_power(instant_wattage, interval, node_name, testing)
+        if 'Instantaneous' in str(line):
+            instant_wattage = line.split(':')[1].strip(' ').split(' ')[0]
+            sensor_name = line.split(':')[0].split()[1]
+            push_to_collectd(node_name, ironic_id, sensor_name, interval, instant_wattage)
 
-def process_raw_output_temperature(output, testing)
+def process_raw_output_temperature(output, node_name, ironic_id, interval):
     p = output.decode("utf-8")
     p = p.splitlines()
     for idx, line in enumerate(p):
         if 'temperature' in str(line):
-            try:
-                temp_line = line.split()
-                sensor_name = temp_line[0] + "_" + temp_line[1]
-                temp_reading = temp_line[4].split('+')[1]
-                if testing:
-                    print("{}: {}".format(sensor_name, temp_reading))
-            except Exception as e:
-                print("Unable to parse for temperature - unexpected error: {} parsing temp_line: {}".format(e, temp_line))
-            push_to_collectd_temperature(temp_reading, sensor_name, interval, node_name, testing)
+            temp_line = line.split()
+            if 'Inlet' in str(line):
+                sensor_name = temp_line[0] + "-" + temp_line[1]
+            elif 'CPU' in str(line):
+                sensor_name = temp_line[0] + "-" + temp_line[3]
+            else:
+                sensor_name = temp_line[0]
+            reading = temp_line[4].split('+')[1] 
+            push_to_collectd(node_name, ironic_id, sensor_name, interval, reading)
             
-def push_to_collectd_temperature(temp_reading, sensor_name, interval, node_name, testing=False):
+def push_to_collectd(node_name, ironic_id, sensor_name, interval, reading):
     """Use the PUTVAL command to push a temperature cosumption tuple into collectd."""
-    if testing:
-        print("Top of push_to_collectd_temperature for node_name: {} and instant_temperature: {}".format(node_name, instant_temperature))
-    ironic_id = get_ironic_id(node_cartridge_code)
     # scripts launched by the collectd exec plugin should write values to standard out in the format specified
     # here:  http://collectd.org/documentation/manpages/collectd-exec.5.shtml
-    print('PUTVAL "{}/exec-{}/gauge-temperature_cpu" interval={} N:{}'.format(hostname, ironic_id, interval, instant_temperature))
+    print('PUTVAL "{}/exec-{}/gauge-{}" interval={} N:{}'.format(node_name, ironic_id, sensor_name, interval, reading))
 
-def main()
+
+def main():
     if os.path.exists('/dell_conf.json'):
-        USER, TESTING, INTERVAL = get_config_from_file()
+        user, testing, interval = get_config_from_file()
     else:
-        USER = os.environ.get('USER', 'root')
-        TESTING = os.environ.get('TESTING', 'False') 
-        INTERVAL = os.environ.get('INTERVAL', '1')
-        
-    if TESTING:
-        NODE = os.environ.get('NODE', '172.16.109.6')
-    get_idrac_password_from_file()            
-    output_power = execute_power_command(USER,idrac_pass,NODE)
-    output_temperature = execute_temperature_command(USER,idrac_pass,NODE)   
+        user = os.environ.get('USER', 'root')
+        testing = os.environ.get('TESTING', 'False') 
+        interval = os.environ.get('INTERVAL', '1')
+    idrac_pass = get_idrac_password_from_file()
+    with open("node_info/single_rack.json") as f:
+        nodes = json.load(f)    
+    for node_name,ironic_id in nodes.items():
+        try:
+            output_power = execute_power_command(user,idrac_pass,node_name)
+        except subprocess.TimeoutExpired:
+            continue
+        else:
+            process_raw_output_power(output_power,node_name,ironic_id, interval)
+            try:
+                output_temperature = execute_temperature_command(user,idrac_pass,node_name)   
+            except subprocess.TimeoutExpired:
+                continue
+            else:
+                process_raw_output_temperature(output_temperature,node_name,ironic_id, interval)
     
-    
-#[root@dev low_power_exec]# ipmitool -I lanplus -U root -P moseisley -H c07-32-oob dcmi get_temp_reading
-#
-#        Entity ID                       Entity Instance    Temp. Readings
-#Inlet air temperature(40h)                      1               +19 C
-#CPU temperature sensors(41h)                    1               +59 C
-#CPU temperature sensors(41h)                    2               +54 C
-#Baseboard temperature sensors(42h)              1               +40 C
+if __name__ == '__main__':
+    main()
+
