@@ -10,11 +10,11 @@ import os
 def get_config_from_file():
     with open('/dell_conf.json', 'r') as f:
         conf = json.load(f)
-    return conf['IDRAC_USER'], conf['INTERVAL'], conf['HOSTNAME'
+    return conf['IDRAC_USER'], conf['INTERVAL']
 
 def get_idrac_password_from_file():
     try:
-        f = open('idrac_password', 'r')
+        f = open('/idrac_password', 'r')
     except FileNotFoundError:
         logging.error('File idrac_password not found.')
     else:
@@ -25,12 +25,12 @@ def get_idrac_password_from_file():
 def execute_power_command(idrac_user,idrac_pass,idrac_host):
     args =["ipmitool", "-I", "lanplus", "-U", idrac_user, "-P", idrac_pass, "-H", idrac_host+"-oob", "dcmi", "power", "reading"]
     try:
-        output = subprocess.check_output(args, timeout=1)
+        output = subprocess.check_output(args, timeout=2)
     except subprocess.TimeoutExpired as e:
         logging.warning('IPMI command timed out on Node %s', idrac_host)
         raise 
-    #except Exception as e:
-    #   logging.warning(e) 
+    except Exception as e:
+       logging.warning('Error on Node %s: %s',idrac_host,e) 
     else:
         return output    
 
@@ -41,8 +41,8 @@ def execute_temperature_command(idrac_user,idrac_pass,idrac_host):
     except subprocess.TimeoutExpired as e:
         logging.warning('IPMI command timed out on Node %s', idrac_host)
         raise
-    #except Exception as e:
-    #    logging.warning(e)
+    except Exception as e:
+       logging.warning('Error on Node %s: %s',idrac_host,e) 
     else:
         return output    
 
@@ -79,27 +79,26 @@ def push_to_collectd(node_name, ironic_id, sensor_name, interval, reading):
 
 def main():
     if os.path.exists('/dell_conf.json'):
-        user, interval, hostname = get_config_from_file()
+        user, interval = get_config_from_file()
     else:
         user = os.environ.get('IDRAC_USER', 'root')
-        interval = os.environ.get('INTERVAL', '1')
-        hostname = os.environ.get('HOSTNAME', 'localhost')
+        interval = os.environ.get('INTERVAL', '180')
  
     idrac_pass = os.environ.get('IDRAC_PASSWORD')
     if not idrac_pass:
         idrac_pass = get_idrac_password_from_file()
-    with open("dell_nodes.json") as f:
+    with open("/dell_nodes.json") as f:
         nodes = json.load(f)    
     for node_name,ironic_id in nodes.items():
         try:
             output_power = execute_power_command(user,idrac_pass,node_name)
-        except subprocess.TimeoutExpired:
+        except:
             continue
         else:
             process_raw_output_power(output_power,node_name,ironic_id, interval)
             try:
                 output_temperature = execute_temperature_command(user,idrac_pass,node_name)   
-            except subprocess.TimeoutExpired:
+            except:
                 continue
             else:
                 process_raw_output_temperature(output_temperature,node_name,ironic_id, interval)

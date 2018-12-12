@@ -1,7 +1,7 @@
 {
 
-  "USER": "root",
-  "TESTING": "False",
-  "INTERVAL": "-60",
+    "IDRAC_USER": "root",
+    "INTERVAL": "-60"
+    "HOSTNAME": "localhost"
 
 }
