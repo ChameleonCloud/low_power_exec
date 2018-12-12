@@ -10,12 +10,17 @@ import os
 def get_config_from_file():
     with open('/dell_conf.json', 'r') as f:
         conf = json.load(f)
-    return conf['IDRAC_USER'], conf['TESTING'], conf['HOSTNAME'], conf['INTERVAL'], conf['WRITE_TIME_RESULTS']
+    return conf['IDRAC_USER'], conf['INTERVAL'], conf['HOSTNAME'
 
 def get_idrac_password_from_file():
-    with open('idrac_password', 'r') as f:
-        idrac_password = f.read()
-    return idrac_password.strip()
+    try:
+        f = open('idrac_password', 'r')
+    except FileNotFoundError:
+        logging.error('File idrac_password not found.')
+    else:
+        with f:
+            idrac_pass = f.read()
+        return idrac_pass.strip()
 
 def execute_power_command(idrac_user,idrac_pass,idrac_host):
     args =["ipmitool", "-I", "lanplus", "-U", idrac_user, "-P", idrac_pass, "-H", idrac_host+"-oob", "dcmi", "power", "reading"]
@@ -74,13 +79,16 @@ def push_to_collectd(node_name, ironic_id, sensor_name, interval, reading):
 
 def main():
     if os.path.exists('/dell_conf.json'):
-        user, testing, interval = get_config_from_file()
+        user, interval, hostname = get_config_from_file()
     else:
-        user = os.environ.get('USER', 'root')
-        testing = os.environ.get('TESTING', 'False') 
+        user = os.environ.get('IDRAC_USER', 'root')
         interval = os.environ.get('INTERVAL', '1')
-    idrac_pass = get_idrac_password_from_file()
-    with open("node_info/single_rack.json") as f:
+        hostname = os.environ.get('HOSTNAME', 'localhost')
+ 
+    idrac_pass = os.environ.get('IDRAC_PASSWORD')
+    if not idrac_pass:
+        idrac_pass = get_idrac_password_from_file()
+    with open("dell_nodes.json") as f:
         nodes = json.load(f)    
     for node_name,ironic_id in nodes.items():
         try:
