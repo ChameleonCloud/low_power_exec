@@ -1,4 +1,4 @@
-# Image: awbarnes/low_power_collectd
+# Image: awbarnes/dell_collectd
 FROM centos:7.4.1708
 
 RUN adduser apim
@@ -7,11 +7,9 @@ RUN yum -y groupinstall development
 RUN yum -y install https://centos7.iuscommunity.org/ius-release.rpm
 RUN yum -y install python36u
 RUN yum -y install python36u-pip
-
-ADD requirements.txt /requirements.txt
-RUN pip3.6 install -r /requirements.txt
-
 RUN yum -y install collectd
+RUN yum -y install ipmitool
+
 
 # gnocchi plugin requires pip2
 RUN yum -y install python2-devel python-pip
@@ -24,7 +22,7 @@ RUN cd /collectd-gnocchi && git checkout moonshot-power && pip2 install .
 ADD collectd.conf /etc/collectd.conf
 
 # exec script
-ADD ironic_ids.json /ironic_ids.json
-ADD collect_readings.py /collect_readings.py
+ADD dell_nodes.json /dell_nodes.json
+ADD collect_dell_readings.py /collect_dell_readings.py
 
 ENTRYPOINT ["collectd", "-f"]

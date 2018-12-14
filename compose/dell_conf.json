@@ -1,6 +1,6 @@
 {
 
     "IDRAC_USER": "root",
-    "INTERVAL": "-60"
+    "INTERVAL": "-300"
 
 }

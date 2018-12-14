@@ -44,7 +44,7 @@ def execute_temperature_command(idrac_user,idrac_pass,idrac_host):
         logging.warning('IPMI command timed out on Node %s', idrac_host)
         raise
     except Exception as e:
-       logging.warning('Error on Node %s: %s',idrac_host,e) 
+        logging.warning('Error on Node %s: %s',idrac_host,e) 
         raise
     else:
         return output    
@@ -85,7 +85,7 @@ def main():
         user, interval = get_config_from_file()
     else:
         user = os.environ.get('IDRAC_USER', 'root')
-        interval = os.environ.get('INTERVAL', '180')
+        interval = os.environ.get('INTERVAL', '300')
  
     idrac_pass = os.environ.get('IDRAC_PASSWORD')
     if not idrac_pass:

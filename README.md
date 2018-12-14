@@ -16,12 +16,11 @@ $ service collectd start
 Update collectd configuration (`/etc/collectd.conf`) to activate the exec plugin and
 ```
 <LoadPlugin exec>
-    Interval 20
+    Interval 300
 </LoadPlugin>
 
 <Plugin exec>
     Exec "<user>:<group>" "/path/to/readings.sh"
-        Interval 20
 </Plugin>
 ```
 

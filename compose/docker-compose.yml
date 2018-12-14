@@ -1,19 +1,19 @@
 version: "2.0"
 services:
-    lowPowerCollectd:
-         image: awbarnes/low_power_collectd:latest
+    dell_collectd:
+         image: awbarnes/dell_collectd:latest
          privileged: True
          volumes:
-             # JSON with each Cartridge mapped to a node UID
-             - ./low_power_conf.json:/low_power_conf.json
-             # SSH password to the Moonshot chassis
-             - ./ssh_password:/ssh_password
+             # JSON with each node mapped to a Ironic ID
+             - ./dell_conf.json:/dell_conf.json
+             # IDRAC password for the Out of Band Controller 
+             - ./idrac_password:/idrac_password
              # Config for collectd with the gnocchi plugin and filled in gnocchi configuration
              - ./collectd-gnocchi.conf.password:/etc/collectd.conf
              # Location of the converted and compiled metrics 
              - ./data:/var/lib/collectd/
              # Location of Logs
-             - ./logs:/var/log/gnocchi_collectd/
+             - ./logs/collectd.log:/var/log/collectd.log
          environment:
              HOSTNAME:
              INTERVAL:
