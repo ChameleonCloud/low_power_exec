@@ -13,7 +13,7 @@ services:
              # Location of the converted and compiled metrics 
              - ./data:/var/lib/collectd/
              # Location of Logs
-             - ./logs/collectd.log:/var/log/collectd.log
+             - ./logs:/var/log/
          environment:
              HOSTNAME:
              INTERVAL:
