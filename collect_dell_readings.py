@@ -65,11 +65,11 @@ def process_raw_output_temperature(output, node_name, ironic_id, interval):
         if 'temperature' in str(line):
             temp_line = line.split()
             if 'Inlet' in str(line):
-                sensor_name = temp_line[0] + "-" + temp_line[1]
+                sensor_name ="temperature_" + temp_line[0] + "-" + temp_line[1]
             elif 'CPU' in str(line):
-                sensor_name = temp_line[0] + "-" + temp_line[3]
+                sensor_name = "temperature_" + temp_line[0] + "-" + temp_line[3]
             else:
-                sensor_name = temp_line[0]
+                sensor_name = "temperature_" + temp_line[0]
             reading = temp_line[4].split('+')[1] 
             push_to_collectd(node_name, ironic_id, sensor_name, interval, reading)
             
@@ -108,4 +108,4 @@ def main():
     
 if __name__ == '__main__':
     main()
-
+s
