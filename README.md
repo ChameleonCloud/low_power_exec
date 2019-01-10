@@ -2,7 +2,7 @@
 
 ## Overview ##
 This project provides a Python script and associated Docker image that can be used as an exec-plugin script to
-collectd to automatically collect instantaneous power usage (in wattage) from low power nodes in an HP Moonshot 1500
+collectd to automatically collect instantaneous power usage (in wattage) and temperature readings (in Celsius) from low power nodes in an HP Moonshot 1500
  Chassis. This work is part of the ChameleonCloud project.
 
 ## Prerequisites ##
