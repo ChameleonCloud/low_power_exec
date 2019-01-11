@@ -13,7 +13,7 @@ services:
              # Location of the converted and compiled metrics 
              - ./data:/var/lib/collectd/
              # Location of Logs
-             - ./logs:/var/log/gnocchi_collectd/
+             - ./logs:/var/log/
          environment:
              HOSTNAME:
              INTERVAL:
