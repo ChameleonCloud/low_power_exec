@@ -219,12 +219,13 @@ class CorsaClient():
             if ofport:
                 path = path + '&ofport=' + str(ofport)
         return self.get_path(ep_stats + '/tunnels')
-        
+
 
 def main():
     client = CorsaClient(os.environ.get('SWITCH_TOKEN'),
                          os.environ.get('SWITCH_IP'),
                          verify=False)
+    print(client.get_stats())
 
 if __name__ == '__main__':
     main()

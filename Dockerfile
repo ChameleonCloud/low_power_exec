@@ -18,9 +18,12 @@ RUN pip install -r /requirements.txt
 RUN pip install git+git://github.com/ChameleonCloud/collectd-gnocchi.git@moonshot-power
 
 COPY collectd.conf /etc/collectd.conf
+COPY collectd.d/ /etc/collectd.d/
+RUN mkdir /etc/collectd.d/enabled
 
-# exec script
 COPY ironic_ids.json /ironic_ids.json
 COPY collect_readings.py /collect_readings.py
+COPY collect_corsa.py /collect_corsa.py
+COPY collectd_wrapper.sh /collectd_wrapper.sh
 
-ENTRYPOINT ["collectd", "-f"]
+ENTRYPOINT ["/collectd_wrapper.sh"]
