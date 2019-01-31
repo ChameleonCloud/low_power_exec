@@ -1,11 +1,26 @@
-# image: low_power_exec
-# Python script to collect power usage (in wattage) and temperature readings (in celsius) FROM low-power nodes in an HP Moonshot 1500 Chassis using iLO commands over SSH to the chassis controller.
+# Image: awbarnes/low_power_collectd
+FROM centos:7
 
+RUN adduser apim
+RUN yum -y install https://centos7.iuscommunity.org/ius-release.rpm \
+  && yum -y groupinstall development \
+  && yum -y install \
+    collectd \
+    python \
+    python-devel \
+    python-pip \
+  && yum clean all
 
-FROM python:3.5.2
-ADD requirements.txt /requirements.txt
-RUN pip install --no-cache-dir -r /requirements.txt
-ADD ironic_ids.json /ironic_ids.json
-ADD collect_readings.py /collect_readings.py
+COPY requirements.txt /requirements.txt
+RUN pip install -r /requirements.txt
 
-CMD ["python", "/collect_readings.py"]
+# checkout the gnocchi plugin
+RUN pip install git+git://github.com/ChameleonCloud/collectd-gnocchi.git@moonshot-power
+
+COPY collectd.conf /etc/collectd.conf
+
+# exec script
+COPY ironic_ids.json /ironic_ids.json
+COPY collect_readings.py /collect_readings.py
+
+ENTRYPOINT ["collectd", "-f"]
