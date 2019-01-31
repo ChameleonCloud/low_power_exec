@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import ConfigParser
 import logging
 import requests
 import json
@@ -222,9 +223,13 @@ class CorsaClient():
 
 
 def main():
-    client = CorsaClient(os.environ.get('SWITCH_TOKEN'),
-                         os.environ.get('SWITCH_IP'),
-                         verify=False)
+    config = ConfigParser.ConfigParser()
+    config.read('/etc/metrics/metrics.conf')
+    switch_ip = config.get('corsa', 'switch_ip')
+    switch_token = config.get('corsa', 'switch_token')
+
+    client = CorsaClient(switch_token, switch_ip, verify=False)
+
     print(client.get_stats())
 
 if __name__ == '__main__':
