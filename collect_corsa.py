@@ -240,7 +240,7 @@ def main():
         identifier = section.replace(section_header, '')
         address = config.get(section, 'address')
         token = config.get(section, 'token')
-        verify = config.get(section, 'ssl_verify')
+        verify = config.getboolean(section, 'ssl_verify', True)
         client = CorsaClient(address, token, verify=verify)
 
         port_stats = client.get_stats_ports()
