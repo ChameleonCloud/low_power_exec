@@ -228,8 +228,14 @@ def main():
     config = ConfigParser.ConfigParser()
     config.read('/etc/metrics/metrics.conf')
 
-    clients = []
-    for section in config.sections() if section.startswith('corsa:'):
+    section_header = 'corsa:'
+    sections = [s for s in config.sections() if s.startswith(section_header)]
+
+    if not sections:
+        raise ValueError('Could not find any valid sections describing switches')
+
+    for section in sections:
+        identifier = section.replace(section_header, '')
         address = config.get('corsa', 'address')
         token = config.get('corsa', 'token')
         verify = config.get('corsa', 'ssl_verify')
