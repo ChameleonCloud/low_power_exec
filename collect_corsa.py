@@ -8,23 +8,23 @@ import re
 
 LOG = logging.getLogger(__name__)
 
-class CorsaClient():
-    ep_datapath = '/datapath'    # Datapath
-    ep_stats = '/stats'          # Stats
-    ep_equipment = '/equipment'  # Equipment
-    ep_qp = '/queue-profiles'    # Queue-profiles
-    ep_ports = '/ports'          # Ports
-    ep_netns = '/netns'
+ep_datapath = '/datapath'    # Datapath
+ep_stats = '/stats'          # Stats
+ep_equipment = '/equipment'  # Equipment
+ep_qp = '/queue-profiles'    # Queue-profiles
+ep_ports = '/ports'          # Ports
+ep_netns = '/netns'
 
-    def __init__(token, switch_ip, verify=True):
+class CorsaClient():
+    def __init__(self, address, token, verify=None):
+        self.address = address
         self.token = token
-        self.switch_ip = switch_ip
         self.verify = verify
         self.api_base = '/api/v1'
 
     def get_path(self, path):
         headers = {'Authorization': self.token}
-        url = 'https://{}{}{}'.format(self.switch_ip, self.api_base, path)
+        url = '{}{}{}'.format(self.address, self.api_base, path)
         return requests.get(url, headers=headers, verify=self.verify)
 
     # GET DATAPATH
@@ -225,12 +225,13 @@ class CorsaClient():
 def main():
     config = ConfigParser.ConfigParser()
     config.read('/etc/metrics/metrics.conf')
-    switch_ip = config.get('corsa', 'switch_ip')
-    switch_token = config.get('corsa', 'switch_token')
+    address = config.get('corsa', 'address')
+    token = config.get('corsa', 'token')
+    verify = config.get('corsa', 'ssl_verify')
 
-    client = CorsaClient(switch_token, switch_ip, verify=False)
+    client = CorsaClient(address, token, verify=verify)
 
-    print(client.get_stats())
+    print(json.dumps(client.get_stats_ports()))
 
 if __name__ == '__main__':
     main()
