@@ -1,0 +1,26 @@
+---
+auth_url:
+username:
+user_domain_name: default
+project_name:
+project_domain_name: default
+password:
+region_name:
+interface: internal
+interval: 20
+batch_size: 1
+
+corsa:
+  resource_type: generic
+  exec_script: /collect_corsa.py
+  switches:
+
+power:
+  resource_type: node
+  batch_size: 40
+  exec_script: /collect_readings.py
+  ssh_user: Administrator
+  hostname: localhost
+  testing: False
+  interval: -60
+  write_time_results: False

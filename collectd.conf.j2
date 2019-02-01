@@ -1,0 +1,38 @@
+# Setup logging
+LoadPlugin logfile
+<Plugin logfile>
+  LogLevel info
+  File "/var/log/collectd.log"
+  Timestamp true
+  PrintSeverity true
+</Plugin>
+
+# For formatting the metrics output
+LoadPlugin csv
+
+# Plugin to convert collectd output to gnocchi syntax
+LoadPlugin python
+<Plugin python>
+  Import "collectd_gnocchi"
+  <Module collectd_gnocchi>
+     Auth_Mode keystone
+     Auth_Url "{{ auth_url }}"
+     Username "{{ username }}"
+     User_Domain_Name "{{ user_domain_name }}"
+     Project_Name "{{ project_name }}"
+     Project_Domain_Name "{{ project_domain_name }}"
+     Password "{{ password }}"
+     Region_Name "{{ region_name }}"
+     Interface "{{ interface }}"
+
+     ResourceType {{ resource_type }}
+     BatchSize {{ batch_size }}
+  </Module>
+</Plugin>
+
+<LoadPlugin exec>
+  Interval {{ interval }}
+</LoadPlugin>
+<Plugin exec>
+    Exec "apim:apim" "python" "{{ exec_script }}"
+</Plugin>

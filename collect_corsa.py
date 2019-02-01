@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-import ConfigParser
 import logging
+import os
 import requests
 import json
 import time
+import yaml
 
 LOG = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ ep_qp = '/queue-profiles'    # Queue-profiles
 ep_ports = '/ports'          # Ports
 ep_netns = '/netns'
 
-metric_template = 'PUTVAL "{host}/corsa-{identifier}/{port}-{metric}" {timestamp}:{value}'
+metric_template = 'PUTVAL "{host}/corsa-{name}/{port}-{metric}" {timestamp}:{value}'
 
 class CorsaClient():
     def __init__(self, address, token, verify=None):
@@ -226,21 +227,24 @@ class CorsaClient():
 
 
 def main():
-    config = ConfigParser.ConfigParser()
-    config.read('/etc/metrics/metrics.conf')
+    config_path = '/etc/metrics/config.yml'
+    if os.path.exists(config_path):
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
 
-    section_header = 'corsa:'
-    sections = [s for s in config.sections() if s.startswith(section_header)]
+    if not config:
+        raise Exception('Could not load config file from {}'.format(config_path))
 
-    if not sections:
-        raise ValueError(
-            'Could not find any valid sections describing switches')
+    if 'corsa' not in config or 'switches' not in config['corsa']:
+        raise Exception('Missing Corsa configuration')
 
-    for section in sections:
-        identifier = section.replace(section_header, '')
-        address = config.get(section, 'address')
-        token = config.get(section, 'token')
-        verify = config.getboolean(section, 'ssl_verify')
+    switches = config['corsa']['switches']
+
+    for switch in switches:
+        name = switch['name']
+        address = switch['address']
+        token = switch['token']
+        verify = getattr(switch, 'ssl_verify', True)
         client = CorsaClient(address, token, verify=verify)
 
         port_stats = client.get_stats_ports()
@@ -251,13 +255,12 @@ def main():
 
                 print(metric_template.format(
                     host='localhost',
-                    identifier=identifier,
+                    name=name,
                     port=stat['port'],
                     metric=key,
                     timestamp=int(time.time()),
                     value=val
                 ))
-
 
 
 if __name__ == '__main__':
