@@ -15,8 +15,7 @@ ep_qp = '/queue-profiles'    # Queue-profiles
 ep_ports = '/ports'          # Ports
 ep_netns = '/netns'
 
-metric_template = 'PUTVAL "{host}/corsa-{section}/{port}-{metric}" {timestamp}:{value}'
-
+metric_template = 'PUTVAL "{host}/corsa-{identifier}/{port}-{metric}" {timestamp}:{value}'
 
 class CorsaClient():
     def __init__(self, address, token, verify=None):
@@ -239,23 +238,26 @@ def main():
 
     for section in sections:
         identifier = section.replace(section_header, '')
-        address = config.get('corsa', 'address')
-        token = config.get('corsa', 'token')
-        verify = config.get('corsa', 'ssl_verify')
+        address = config.get(section, 'address')
+        token = config.get(section, 'token')
+        verify = config.get(section, 'ssl_verify')
         client = CorsaClient(address, token, verify=verify)
 
-        try:
-            port_stats = client.get_stats_ports()
-            for stat in port_stats['stats']:
-                for key, val in stat.items():
-                    print(metric_template.format(
-                        host='test',
-                        section=section,
-                        port=stat['port'],
-                        metric=key,
-                        timestamp=int(time.time()),
-                        value=val
-                    ))
+        port_stats = client.get_stats_ports()
+        for stat in port_stats['stats']:
+            for key, val in stat.items():
+                if key in ['ifdescr', 'port']:
+                    continue
+
+                print(metric_template.format(
+                    host='localhost',
+                    identifier=identifier,
+                    port=stat['port'],
+                    metric=key,
+                    timestamp=int(time.time()),
+                    value=val
+                ))
+
 
 
 if __name__ == '__main__':
