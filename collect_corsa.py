@@ -4,7 +4,7 @@ import ConfigParser
 import logging
 import requests
 import json
-import re
+import time
 
 LOG = logging.getLogger(__name__)
 
@@ -14,6 +14,8 @@ ep_equipment = '/equipment'  # Equipment
 ep_qp = '/queue-profiles'    # Queue-profiles
 ep_ports = '/ports'          # Ports
 ep_netns = '/netns'
+
+metric_template = 'PUTVAL "{host}/corsa-{section}/{port}-{metric}" {timestamp}:{value}'
 
 class CorsaClient():
     def __init__(self, address, token, verify=None):
@@ -25,7 +27,8 @@ class CorsaClient():
     def get_path(self, path):
         headers = {'Authorization': self.token}
         url = '{}{}{}'.format(self.address, self.api_base, path)
-        return requests.get(url, headers=headers, verify=self.verify)
+        resp = requests.get(url, headers=headers, verify=self.verify)
+        return resp.json()
 
     # GET DATAPATH
     #   200 OK
@@ -221,17 +224,29 @@ class CorsaClient():
                 path = path + '&ofport=' + str(ofport)
         return self.get_path(ep_stats + '/tunnels')
 
-
 def main():
     config = ConfigParser.ConfigParser()
     config.read('/etc/metrics/metrics.conf')
-    address = config.get('corsa', 'address')
-    token = config.get('corsa', 'token')
-    verify = config.get('corsa', 'ssl_verify')
 
-    client = CorsaClient(address, token, verify=verify)
+    clients = []
+    for section in config.sections() if section.startswith('corsa:'):
+        address = config.get('corsa', 'address')
+        token = config.get('corsa', 'token')
+        verify = config.get('corsa', 'ssl_verify')
+        client = CorsaClient(address, token, verify=verify)
 
-    print(json.dumps(client.get_stats_ports()))
+        try:
+            port_stats = client.get_stats_ports()
+            for stat in port_stats['stats']:
+                for key, val in stat if key not in ['ifdesc', 'port']:
+                    print(metric_template.format(
+                        host='test',
+                        section=section,
+                        port=stat['port'],
+                        metric=key,
+                        timestamp=int(time.time()),
+                        value=val
+                    ))
 
 if __name__ == '__main__':
     main()
