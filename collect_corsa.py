@@ -16,7 +16,7 @@ ep_qp = '/queue-profiles'    # Queue-profiles
 ep_ports = '/ports'          # Ports
 ep_netns = '/netns'
 
-metric_template = 'PUTVAL "{host}/corsa-{name}/{port}-{metric}" {timestamp}:{value}'
+metric_template = 'PUTVAL "{host}/corsa-{name}/{metric}-{port}" {timestamp}:{value}'
 
 class CorsaClient():
     def __init__(self, address, token, verify=None):
@@ -241,10 +241,10 @@ def main():
     switches = config['corsa']['switches']
 
     for switch in switches:
-        name = switch['name']
-        address = switch['address']
-        token = switch['token']
-        verify = getattr(switch, 'ssl_verify', True)
+        name = switch.get('name')
+        address = switch.get('address')
+        token = switch.get('token')
+        verify = switch.get('ssl_verify', True)
         client = CorsaClient(address, token, verify=verify)
 
         port_stats = client.get_stats_ports()
