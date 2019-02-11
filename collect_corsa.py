@@ -16,7 +16,7 @@ ep_qp = '/queue-profiles'    # Queue-profiles
 ep_ports = '/ports'          # Ports
 ep_netns = '/netns'
 
-metric_template = 'PUTVAL "{host}/corsa-{name}/{metric}-{port}" {timestamp}:{value}'
+metric_template = 'PUTVAL "{host}/corsa/{type}-{type_instance}" {timestamp}:{value}'
 
 class CorsaClient():
     def __init__(self, address, token, verify=None):
@@ -225,6 +225,16 @@ class CorsaClient():
                 path = path + '&ofport=' + str(ofport)
         return self.get_path(ep_stats + '/tunnels')
 
+CORSA_TO_COLLECTD_TYPE_MAP = {
+    'tx_packets': 'if_tx_packets',
+    'tx_errors': 'if_tx_errors',
+    'tx_bytes': 'if_tx_octets',
+    'tx_dropped': 'if_tx_dropped',
+    'rx_packets': 'if_rx_packets',
+    'rx_errors': 'if_rx_errors',
+    'rx_bytes': 'if_rx_octets',
+    'rx_dropped': 'if_rx_dropped'
+}
 
 def main():
     config_path = '/etc/metrics/config.yml'
@@ -250,14 +260,13 @@ def main():
         port_stats = client.get_stats_ports()
         for stat in port_stats['stats']:
             for key, val in stat.items():
-                if key in ['ifdescr', 'port']:
+                if key not in CORSA_TO_COLLECTD_TYPE_MAP:
                     continue
 
                 print(metric_template.format(
-                    host='localhost',
-                    name=name,
-                    port=stat['port'],
-                    metric=key,
+                    host=name,
+                    type=CORSA_TO_COLLECTD_TYPE_MAP[key],
+                    type_instance=stat['port'],
                     timestamp=int(time.time()),
                     value=val
                 ))
