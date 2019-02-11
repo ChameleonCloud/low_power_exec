@@ -34,5 +34,5 @@ LoadPlugin python
   Interval {{ interval }}
 </LoadPlugin>
 <Plugin exec>
-    Exec "apim:apim" "python" "{{ exec_script }}"
+    Exec "apim:apim" "python" "{{ exec_script }}" "--config-file" "{{ config_file }}"
 </Plugin>

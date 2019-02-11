@@ -19,6 +19,8 @@ with open('$tmp_config_path') as f:
   config = safe_load(f)
   # Merge command-specific configuration into parent scope
   config.update(config.get('$command'))
+  # Template out name of config file
+  config.update(config_file=$tmp_config_path')
 output = template.render(config)
 with open('/etc/collectd.conf', 'wb') as f:
   f.write(output + '\n')

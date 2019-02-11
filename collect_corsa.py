@@ -237,7 +237,16 @@ CORSA_TO_COLLECTD_TYPE_MAP = {
 }
 
 def main():
-    config_path = '/etc/metrics/config.yml'
+    import argparse
+
+    parser = argparse.ArgumentParser(description=('Query metrics from a Corsa switch via its REST API' +
+                                                  ' and convert to collectd-compatible metrics.'))
+    parser.add_argument('-c', '--config-file', type=argparse.FileType('r'),
+                        help='the YAML configuration file')
+    argv = parser.parse_args()
+
+    config_file = argv['config-file']
+
     if os.path.exists(config_path):
         with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
