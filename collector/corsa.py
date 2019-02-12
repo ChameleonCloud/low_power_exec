@@ -3,7 +3,6 @@ import os
 import requests
 import json
 import time
-import yaml
 
 LOG = logging.getLogger(__name__)
 
@@ -60,14 +59,14 @@ def collect(config):
     switches = config['switches']
     clients = []
 
-    for switch in self.switches:
+    for switch in switches:
         address = switch.get('address')
         token = switch.get('token')
         name = switch.get('name')
         verify = switch.get('ssl_verify', True)
         clients.append(CorsaClient(address, token, name=name, verify=verify))
 
-    for client in self.clients:
+    for client in clients:
         port_stats = client.get_stats_ports()
         for stat in port_stats['stats']:
             for key, val in stat.items():
