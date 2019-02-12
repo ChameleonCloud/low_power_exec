@@ -6,7 +6,7 @@ import time
 
 LOG = logging.getLogger(__name__)
 
-metric_template = 'PUTVAL "{host}/corsa/{type}-{type_instance}" {timestamp}:{value}'
+metric_template = 'PUTVAL "{host}/switch/{type}-{type_instance}" {timestamp}:{value}'
 
 class CorsaClient():
     def __init__(self, address, token, name=None, verify=None):

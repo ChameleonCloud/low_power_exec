@@ -10,8 +10,8 @@ interface: internal
 interval: 20
 batch_size: 1
 
-corsa:
-  resource_type: generic
+switch_corsa:
+  resource_type: switch
   switches:
 
 chassis_moonshot:
