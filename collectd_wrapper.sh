@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-command="${1:-power}"
+module="${1:-power}"
 user=apim
 
 config_path=/etc/metrics/config.yml
@@ -17,10 +17,10 @@ with open('/collectd.conf.j2') as f:
   template = Template(f.read())
 with open('$tmp_config_path') as f:
   config = safe_load(f)
-  # Merge command-specific configuration into parent scope
-  config.update(config.get('$command'))
-  # Template out name of config file
-  config.update(config_file='$tmp_config_path')
+  # Merge module-specific configuration into parent scope
+  config.update(config.get('$module'))
+  # Add in some information for the loader
+  config.update(module_name='$module', config_file='$tmp_config_path')
 output = template.render(config)
 with open('/etc/collectd.conf', 'wb') as f:
   f.write(output + '\n')
