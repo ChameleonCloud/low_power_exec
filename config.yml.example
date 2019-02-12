@@ -12,14 +12,13 @@ batch_size: 1
 
 corsa:
   resource_type: generic
-  exec_script: /collect_corsa.py
   switches:
 
 power:
   resource_type: node
   batch_size: 40
-  exec_script: /collect_readings.py
   ssh_user: Administrator
+  ssh_password:
   hostname: localhost
   testing: False
   interval: -60
