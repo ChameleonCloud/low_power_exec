@@ -1,6 +1,5 @@
+collectd-gnocchi
 ipython~=5.0
 jinja2
 paramiko
 pyyaml
-
-git+git://github.com/ChameleonCloud/collectd-gnocchi.git@moonshot-power

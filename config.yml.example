@@ -14,7 +14,7 @@ corsa:
   resource_type: generic
   switches:
 
-power:
+chassis_moonshot:
   resource_type: node
   batch_size: 40
   ssh_user: Administrator
@@ -23,3 +23,7 @@ power:
   testing: False
   interval: -60
   write_time_results: False
+  node_ids:
+
+chassis_dell:
+  resource_type: node

@@ -4,12 +4,16 @@ iLO commands over SSH to the chassis controller.
 """
 import json
 import logging
-import os
 import sys
 from paramiko import SSHClient, AutoAddPolicy
 from timeit import default_timer as timer
 
 LOG = logging.getLogger(__name__)
+
+# scripts launched by the collectd exec plugin should write values to standard out in the format specified
+# here:  http://collectd.org/documentation/manpages/collectd-exec.5.shtml
+power_metric_template = 'PUTVAL "{host}/chassis/{type}" {timestamp}:{value}'
+temperature_metric_template = 'PUTVAL "{host}/chassis/{type}-{type_instance}" {timestamp}:{value}'
 
 def execute_power_command(ssh, command='show cartridge power all'):
     """Execute the iLO power command to collect power data over an `ssh` connection to the chassis controller."""
@@ -34,18 +38,13 @@ def push_to_collectd_power(node_name, node_cartridge_code, instant_wattage, host
     """Use the PUTVAL command to push a power cosumption tuple into collectd."""
     LOG.debug("Top of push_to_collectd_power for node_name: {} and instant_wattage: {}".format(node_name, instant_wattage))
     ironic_id = get_ironic_id(node_cartridge_code)
-    # scripts launched by the collectd exec plugin should write values to standard out in the format specified
-    # here:  http://collectd.org/documentation/manpages/collectd-exec.5.shtml
-    print('PUTVAL "{}/exec-{}/gauge-power" N:{}'.format(hostname, ironic_id, instant_wattage))
-    # print('PUTVAL "{}" N:{}'.format(node_cartridge_code, instant_wattage))
+    print(power_metric_template.format(host=ironic_id, type='power', timestamp='N', value=instant_wattage))
 
 def push_to_collectd_temperature(node_name, node_cartridge_code, instant_temperature, hostname):
     """Use the PUTVAL command to push a temperature cosumption tuple into collectd."""
     LOG.debug("Top of push_to_collectd_temperature for node_name: {} and instant_temperature: {}".format(node_name, instant_temperature))
     ironic_id = get_ironic_id(node_cartridge_code)
-    # scripts launched by the collectd exec plugin should write values to standard out in the format specified
-    # here:  http://collectd.org/documentation/manpages/collectd-exec.5.shtml
-    print('PUTVAL "{}/exec-{}/gauge-temperature_cpu" N:{}'.format(hostname, ironic_id, instant_temperature))
+    print(temperature_metric_template.format(host=ironic_id, type='temperature', type_instance='cpu', timestamp='N', value=instant_temperature))
 
 def process_raw_output_power(output, hostname):
     """Parse the raw output from the power command and issue PUTVAL commands to push data to collectd."""
