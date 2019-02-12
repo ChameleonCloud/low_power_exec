@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import argparse
 from importlib import import_module
 from yaml import safe_load

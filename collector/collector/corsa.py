@@ -30,7 +30,7 @@ class CorsaClient():
     #   200 OK
     def get_stats_ports(self, port=None):
         path = '/stats/ports'
-        if port:``
+        if port:
             path = path + '?port=' + str(port)
         return self.get_path(path)
 

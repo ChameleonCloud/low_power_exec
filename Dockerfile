@@ -16,7 +16,7 @@ RUN pip install -r /requirements.txt && rm -f /requirements.txt
 
 COPY collectd.conf.j2 /collectd.conf.j2
 COPY collectd_wrapper.sh /collectd_wrapper.sh
-COPY collect.py /collect.py
 COPY collector /collector
+RUN pip install /collector
 
 ENTRYPOINT ["/collectd_wrapper.sh"]
