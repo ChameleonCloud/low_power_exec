@@ -1,3 +1,4 @@
 from setuptools import setup
 
-setup(name='collector')
+setup(name='collector',
+      packages=['collector'])

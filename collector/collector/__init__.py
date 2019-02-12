@@ -21,6 +21,3 @@ def main():
         raise Exception('Missing module configuration')
 
     module.collect(config[argv.module])
-
-if __name__ == '__main__':
-    main()
