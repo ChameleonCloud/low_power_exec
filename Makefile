@@ -1,6 +1,6 @@
 DOCKER_REGISTRY := docker.chameleoncloud.org
 DOCKER_REPO := user-metric-collector
-DOCKER_TAG := stable
+DOCKER_TAG := $(shell git rev-parse --short HEAD)
 
 DOCKER_IMAGE := $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(DOCKER_TAG)
 
