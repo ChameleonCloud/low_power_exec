@@ -1,4 +1,3 @@
-# Image: awbarnes/low_power_collectd
 FROM centos:7
 
 RUN adduser apim
