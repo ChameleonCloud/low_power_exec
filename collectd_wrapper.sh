@@ -1,9 +1,26 @@
 #!/usr/bin/env bash
-module="${1:-power}"
+set -e -u
+
+module="${1:-}"
 user=apim
+
+if [[ -z "$module" ]]; then
+  cat <<USAGE
+Usage: $0 [MODULE]
+
+Runs collector MODULE in a separate collectd process.
+Valid collectors can be found in the python 'collector' module.
+
+Example:
+  # Run the 'switch_corsa' collector
+  $0 switch_corsa
+USAGE
+  exit 1
+fi
 
 config_path=/etc/metrics/config.yml
 logs_path=/var/log/collectd.log
+collectd_conf_path=/etc/collectd.conf
 # Create a copy of the metrics; we are going to be changing the ownership
 # so that the plugin code can read this as configuration.
 tmp_config_path=$(mktemp --tmpdir metrics-config.XXXXXX.yml)
@@ -22,13 +39,14 @@ with open('$tmp_config_path') as f:
   # Add in some information for the loader
   config.update(module_name='$module', config_file='$tmp_config_path')
 output = template.render(config)
-with open('/etc/collectd.conf', 'wb') as f:
+with open('$collectd_conf_path', 'wb') as f:
   f.write(output + '\n')
 PYSCRIPT
 
 if [[ $? -gt 0 ]]; then
   echo "Failed to write collectd configuration."
   exit 1
-fi
+else
 
+echo "Wrote collectd configuration to $collectd_conf_path."
 exec collectd -f
