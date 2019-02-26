@@ -11,7 +11,7 @@ RUN yum -y install https://centos7.iuscommunity.org/ius-release.rpm \
   && yum clean all
 
 COPY requirements.txt /requirements.txt
-RUN pip install --user -r /requirements.txt && rm -f /requirements.txt
+RUN pip install -r /requirements.txt && rm -f /requirements.txt
 
 COPY collectd.conf.j2 /collectd.conf.j2
 COPY collectd_wrapper.sh /collectd_wrapper.sh
