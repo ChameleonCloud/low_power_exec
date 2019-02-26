@@ -11,3 +11,4 @@ build:
 .PHONY: publish
 publish:
 	docker push $(DOCKER_IMAGE)
+	docker tag $(DOCKER_IMAGE) $(DOCKER_REGISTRY)/$(DOCKER_REPO):stable
