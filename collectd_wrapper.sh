@@ -46,7 +46,7 @@ PYSCRIPT
 if [[ $? -gt 0 ]]; then
   echo "Failed to write collectd configuration."
   exit 1
-else
+fi
 
 echo "Wrote collectd configuration to $collectd_conf_path."
 exec collectd -f
